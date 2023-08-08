@@ -1,0 +1,33 @@
+{
+  "name": "my-microservice",
+  "version": "1.0.0",
+  "description": "<!-- title: 'AWS NodeJS Example' description: 'This template demonstrates how to deploy a NodeJS function running on AWS Lambda using the traditional Serverless Framework.' layout: Doc framework: v2 platform: AWS language: nodeJS priority: 1 authorLink: 'https://github.com/serverless' authorName: 'Serverless, inc.' authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4' -->",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulpeng0108/my-microservice.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paulpeng0108/my-microservice/issues"
+  },
+  "homepage": "https://github.com/paulpeng0108/my-microservice#readme",
+  "dependencies": {
+    "@aws-cdk/aws-sqs": "^1.165.0",
+    "aws-sdk": "^2.1169.0",
+    "axios": "^0.27.2",
+    "boom": "^7.3.0",
+    "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.5",
+    "mongodb": "^4.1.4"
+  },
+  "devDependencies": {
+    "serverless-disable-functions": "^1.0.0",
+    "serverless-lift": "^1.19.1",
+    "serverless-offline": "^8.8.0"
+  }
+}

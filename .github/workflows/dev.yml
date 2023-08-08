@@ -1,0 +1,25 @@
+name: Deploy To Dev
+# on main branch updates
+on:
+    push:
+        branches:
+            - dev
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: "12.x"
+              #install serverless
+            - name: Install Serverless Framework
+              run: npm install -g serverless@2.72.2
+              # authentication
+            - name: Serverless AWS authentication
+              run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.SECRET_ACCESS_KEY }}
+            - name: Install NPM dependencies
+              run: npm install
+              #serverless deploy
+            - name: Deploy
+              run: sls deploy --stage=dev

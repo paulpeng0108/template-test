@@ -1,0 +1,25 @@
+name: Deploy To PROD
+# on main branch updates
+on:
+    push:
+        branches:
+            - master
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "16"
+              #install serverless
+            - name: Install Serverless Framework
+              run: npm install -g serverless@2.72.2
+              # authentication
+            - name: Serverless AWS authentication
+              run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.SECRET_ACCESS_KEY }}
+            - name: Install NPM dependencies
+              run: npm install
+              #serverless deploy
+            - name: Deploy
+              run: sls deploy --stage=prod

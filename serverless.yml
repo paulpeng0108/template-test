@@ -1,0 +1,123 @@
+app: my-microservice
+service: my-microservice
+
+frameworkVersion: '2'
+
+custom:
+  mongo:
+    dev: loaclDB
+    test: testDB
+    prod: prodDB
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  lambdaHashingVersion: '20201221'
+  stage: ${opt:stage, 'local'}
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            Fn::GetAtt: [ NewSQSQueue, Arn ]
+        - Effect: Allow
+          Action:
+            - dynamodb:*
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/*"
+        - Effect: Allow
+          Action:
+            - events:PutRule
+          Resource: "arn:aws:events:${self:provider.region}:*:rule/*"
+
+      
+  environment:
+    MONGO_URI: "${self:custom.mongo.${self:provider.stage}}"
+    SQS_QUEUE_URL: { Ref: NewSQSQueue }
+    TEST_ID: 4
+    TASK_DURATION: 100
+    SUCCESS_CHANCE: 0
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: /hello
+          method: get
+          cors:
+            origin: '*' # <-- Specify allowed origin
+            headers: # <-- Specify allowed headers
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - nesn-access-token
+              - nesn-user-token
+              - nesn-tve-token
+              - nesn-user-zipcode
+              - nesn-device-id
+            allowCredentials: false
+  producer:
+    handler: handler.producer
+    events:
+      - http:
+          path: /producer
+          method: post
+          cors: true
+  consumer:
+    handler: handler.consumer
+    events:
+      - sqs:
+          batchSize: 1
+          functionResponseType: ReportBatchItemFailures
+          arn:
+            Fn::GetAtt: [NewSQSQueue, Arn]
+  heartBeat:
+    handler: handler.heartBeat
+    events:
+      - http:
+          path: /heartBeat
+          method: post
+          cors: true
+  # cronTest:
+  #   handler: handler.cronTest
+  #   events:
+  #     - schedule: rate(1 minute)
+  enableTest:
+    handler: handler.enableTest
+    enabled: false
+    events:
+      - http:
+          path: /enableTest
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    NewSQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-queue.fifo
+        FifoQueue: true
+        RedrivePolicy: 
+          deadLetterTargetArn: 
+            Fn::GetAtt: [MyDeadLetterQueue, Arn]
+          maxReceiveCount: 2
+    MyDeadLetterQueue: 
+      Type: AWS::SQS::Queue
+      Properties:
+        FifoQueue: true
+        QueueName: ${self:provider.stage}-dead-letter-queue.fifo
+        MessageRetentionPeriod: 1209600
+        RedriveAllowPolicy: 
+          Fn::Sub: '{"redrivePermission": "byQueue", "sourceQueueArns": ["arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${self:provider.stage}-queue.fifo"]}'
+
+
+
+plugins:
+  - serverless-offline
